@@ -1,4 +1,3 @@
-// src/commands/top.ts
 import { defineCommand } from "../Command";
 import { getTopPlayers, getTotalPlayers } from "../services/scoreServices";
 import { reply } from "../utils";
@@ -18,7 +17,7 @@ defineCommand({
             const endIndex = startIndex + limit;
 
             const allPlayers = await getTopPlayers(1000); 
-            const totalPlayers = await getTotalPlayers(); // Fixed: Now using the function
+            const totalPlayers = await getTotalPlayers(); 
             const totalPages = Math.ceil(totalPlayers / limit);
 
             if (page > totalPages) {

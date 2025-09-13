@@ -20,25 +20,25 @@ function getCategoryValue<T>(record: Record<Category, T>, category: string, defa
 
 export const CONTINUOUS_GAMES_CONFIG = {
     FLAG_CHANNEL: {
-        id: CONTINUOUS_GAMES.FLAG_CHANNEL, // Use the actual ID from constants
+        id: CONTINUOUS_GAMES.FLAG_CHANNEL, 
         category: "flag" as Category,
         data: flags,
         emoji: EMOJI.flag
     },
     CAPITAL_CHANNEL: {
-        id: CONTINUOUS_GAMES.CAPITAL_CHANNEL, // Use the actual ID from constants
+        id: CONTINUOUS_GAMES.CAPITAL_CHANNEL, 
         category: "capital" as Category,
         data: capitals,
         emoji: EMOJI.capital
     },
     LANGUAGE_CHANNEL: {
-        id: CONTINUOUS_GAMES.LANGUAGE_CHANNEL, // Use the actual ID from constants
+        id: CONTINUOUS_GAMES.LANGUAGE_CHANNEL, 
         category: "language" as Category,
         data: languages,
         emoji: EMOJI.language
     },
     KABUPATEN_CHANNEL: {
-        id: CONTINUOUS_GAMES.KABUPATEN_CHANNEL, // Use the actual ID from constants
+        id: CONTINUOUS_GAMES.KABUPATEN_CHANNEL, 
         category: "kabupaten" as Category,
         data: kabupatens,
         emoji: EMOJI.kabupaten_provinsi
@@ -94,25 +94,19 @@ export function startContinuousGames(): void {
         };
         
         gameStates.set(channelConfig.id, gameChannel);
-        postNewQuestion(channelConfig.id); // Only post initial question
+        postNewQuestion(channelConfig.id); 
     });
 }
 
 function pickRandomQuestion(data: any): Question {
-    console.log("=== PICK RANDOM QUESTION ===");
-    
-    // Check kabupaten first since it's more specific
+  
     if (isKabupatenData(data)) {
-        console.log("Detected kabupaten data");
         return pickFromKabupatenData(data);
     } else if (isCapitalData(data)) {
-        console.log("Detected capital data");
         return pickFromCapitalData(data);
     } else if (isLanguageData(data)) {
-        console.log("Detected language data");
         return pickFromLanguageData(data);
     } else {
-        console.log("Detected flat data");
         return pickFromFlatData(data);
     }
 }
@@ -168,16 +162,14 @@ function pickFromCapitalData(data: Record<string, Record<string, { question: str
 }
 
 
-// In src/services/continuousGame.ts
+
 function pickFromKabupatenData(data: any): Question {
-    console.log("Kabupaten data detected, processing...");
     
-    // Flatten all kabupatens from all provinces
     const allKabupatens: Array<{ image_url: string; question: string; answer: string[] }> = [];
     
-    // Iterate through provinces
+
     Object.values(data).forEach((province: any) => {
-        // Iterate through kabupatens in each province
+      
         Object.values(province).forEach((kabupaten: any) => {
             if (kabupaten && typeof kabupaten === 'object' && 
                 kabupaten.image_url && kabupaten.question && kabupaten.answer) {
@@ -190,7 +182,6 @@ function pickFromKabupatenData(data: any): Question {
         });
     });
     
-    console.log(`Total kabupatens found: ${allKabupatens.length}`);
     
     if (allKabupatens.length === 0) {
         return {
@@ -201,8 +192,6 @@ function pickFromKabupatenData(data: any): Question {
     }
     
     const randomKabupaten = allKabupatens[Math.floor(Math.random() * allKabupatens.length)];
-    console.log("Selected kabupaten:", randomKabupaten);
-    
     return randomKabupaten;
 }
 
@@ -238,8 +227,6 @@ export async function postNewQuestion(channelId: string) {
     gameChannel.state.currentQuestion = pickRandomQuestion(gameChannel.data);
     gameChannel.state.questionCount++;
     
-    console.log("Current question:", gameChannel.state.currentQuestion);
-    
     try {
         const channel = await client.rest.channels.get(channelId);
         
@@ -253,13 +240,11 @@ export async function postNewQuestion(channelId: string) {
                 }
             };
 
-            // Add image if it exists and is a valid URL
+           
             if (gameChannel.state.currentQuestion.image_url && 
                 gameChannel.state.currentQuestion.image_url.startsWith('http')) {
-                console.log("Adding image to embed:", gameChannel.state.currentQuestion.image_url);
                 embedData.image = { url: gameChannel.state.currentQuestion.image_url };
             } else {
-                console.log("Invalid or missing image URL:", gameChannel.state.currentQuestion.image_url);
             }
 
             await client.rest.channels.createMessage(channelId, {
@@ -311,7 +296,7 @@ export async function handleContinuousAnswer(
         };
         await addCurrency(userId, reward);
         
-        // ONLY post new question when answer is correct
+
         await postNewQuestion(channelId);
         
         return { 
@@ -358,14 +343,14 @@ export function isContinuousGameChannel(channelId: string): boolean {
     return gameStates.has(channelId);
 }
 
-// src/services/continuousGame.ts
+
 export function skipContinuousQuestion(channelId: string): string | null {
     const gameChannel = gameStates.get(channelId);
     if (!gameChannel || !gameChannel.state.currentQuestion) return null;
     
     const currentAnswer = gameChannel.state.currentQuestion.answer[0];
     
-    // Post a new question immediately
+   
     postNewQuestion(channelId);
     
     return currentAnswer;

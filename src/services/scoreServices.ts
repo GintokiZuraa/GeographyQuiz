@@ -106,7 +106,7 @@ export async function getLeaderboard(category?: Category, limit: number = 10) {
       }
     });
 
-    // Calculate totals and sort
+   
     return allScores
       .map(player => ({
         userId: player.userId,
@@ -117,7 +117,7 @@ export async function getLeaderboard(category?: Category, limit: number = 10) {
   }
 }
 
-// Batch update multiple categories at once
+
 export async function addScores(userId: string, scores: Partial<Record<Category, number>>) {
   const updateData: any = { updatedAt: new Date() };
   
@@ -152,10 +152,10 @@ export interface LeaderboardEntry {
     rank: number;
 }
 
-// Cache for leaderboard data
+
 let cachedLeaderboard: LeaderboardEntry[] = [];
 let lastCacheTime: number = 0;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_DURATION = 60 * 60 * 1000; 
 
 export async function getCachedLeaderboard(): Promise<LeaderboardEntry[]> {
     const now = Date.now();

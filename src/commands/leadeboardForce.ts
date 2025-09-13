@@ -1,4 +1,3 @@
-// src/commands/forceUpdateLeaderboard.ts
 import { defineCommand } from "../Command";
 import { refreshLeaderboardCache } from "../services/scoreServices";
 import { reply } from "../utils";

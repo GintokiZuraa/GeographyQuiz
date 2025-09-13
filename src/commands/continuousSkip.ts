@@ -1,11 +1,10 @@
-// src/commands/continuousSkip.ts
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { reply } from "../utils";
 import { skipContinuousQuestion, isContinuousGameChannel, getCurrentQuestionAnswer } from "../services/continuousGame";
 
 const skipCooldowns = new Map<string, number>();
-const COOLDOWN_TIME = 10000; // 10 seconds cooldown
+const COOLDOWN_TIME = 10000; 
 
 function checkCooldown(userId: string): { onCooldown: boolean; remaining: number } {
     const lastSkip = skipCooldowns.get(userId);
@@ -33,12 +32,12 @@ defineCommand({
     usages: [],
     hidden: true,
     async run(message) {
-        // Check if this is a continuous game channel
+     
         if (!message.channel || !isContinuousGameChannel(message.channel.id)) {
             return reply(message, "This command only works in continuous game channels.");
         }
 
-        // Check cooldown
+   
         const cooldown = checkCooldown(message.author.id);
         if (cooldown.onCooldown) {
             return reply(message, {
@@ -53,17 +52,17 @@ defineCommand({
             });
         }
 
-        // Get current answer before skipping (for display)
+      
         const currentAnswer = getCurrentQuestionAnswer(message.channel.id);
         
-        // Skip the question
+      
         const skippedAnswer = skipContinuousQuestion(message.channel.id);
         
         if (!skippedAnswer) {
             return reply(message, "Failed to skip the question.");
         }
 
-        // Set cooldown
+     
         skipCooldowns.set(message.author.id, Date.now());
 
         return reply(message, {

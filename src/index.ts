@@ -8,27 +8,25 @@ import { startReminderScheduler } from './modules/reminderScheduler.js';
 import { gameEvents } from './modules/gameEvents.js';
 import { getAliasData, createAliasEmbed, createPaginationButtons } from "./commands/aliases.js";
 
-// Add this: Message handler for continuous games
 client.on("messageCreate", async (message) => {
-    // Handle continuous game messages
+  
     const wasHandled = await handleContinuousGameMessage(message);
     if (wasHandled) return;
     
-    // Your other message handling logic can go here if needed
 });
 
 client.on("interactionCreate", async (interaction) => {
-    // Check if it's a message component interaction
+  
     if (interaction.type !== 3) return;
     
-    // Check if it has a custom ID and it's an alias button
+  
     if (!interaction.data.customID || !interaction.data.customID.startsWith("alias_")) return;
 
     try {
         const customID = interaction.data.customID;
         const parts = customID.split("_");
         
-        if (parts.length < 5) return; // Invalid format
+        if (parts.length < 5) return; 
         
         const action = parts[1];
         const category = parts[2];
@@ -37,7 +35,7 @@ client.on("interactionCreate", async (interaction) => {
 
         if (isNaN(page)) return;
 
-        // Get the alias data
+    
         const data = getAliasData(category, subcategory, page);
         if (!data) {
             await interaction.deferUpdate();
@@ -45,11 +43,11 @@ client.on("interactionCreate", async (interaction) => {
             return;
         }
 
-        // Create the updated embed and buttons
+
         const embed = createAliasEmbed(category, subcategory, page, data);
         const components = createPaginationButtons(category, subcategory, page, data.totalPages);
 
-        // Update the message
+    
         await interaction.deferUpdate();
         await interaction.editOriginal({
             embeds: [embed],
@@ -66,9 +64,7 @@ client.on("interactionCreate", async (interaction) => {
         }
     }
 
-    // Remove this line from here - it doesn't belong in interactionCreate
-    // const wasHandled = await handleContinuousGameMessage(interaction);
-    // if (wasHandled) return;
+    
 });
 
 gameEvents.on('gameCancelled', async (game) => {
@@ -90,10 +86,10 @@ gameEvents.on('gameCancelled', async (game) => {
     }
 });
 
-// Connect the bot
+
 client.connect();
 
-// Start the reminder scheduler only when the bot is ready
+
 client.on('ready', () => {
   console.log(`✅ Logged in as ${client.user?.tag}`);
   startReminderScheduler(client);
