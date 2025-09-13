@@ -2,7 +2,7 @@
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { flags } from "../data/flags";
-import { createGame, startGame, games} from "../services/gameManager";
+import { createGame, startGame, games, stopGame, skipQuestion } from "../services/gameManager";
 import { reply } from "../utils";
 import { formatScores } from "../modules/gameEvents";
 

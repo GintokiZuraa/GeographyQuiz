@@ -1,7 +1,7 @@
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { UnitedStates } from "../data/americanStates"; 
-import { createGame, startGame, games, stopGame } from "../services/gameManager";
+import { createGame, startGame, games, stopGame, skipQuestion } from "../services/gameManager";
 import { reply } from "../utils";
 
 

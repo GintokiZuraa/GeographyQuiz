@@ -20,6 +20,7 @@ defineCommand({
     name: "title",
     description: "Manage your profile title",
     usages: ["list", "select <title>"],
+    hidden: true,
     async run(message, args) {
         const subcommand = args[0]?.toLowerCase();
 

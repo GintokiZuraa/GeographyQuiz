@@ -2,7 +2,11 @@ import { gameEvents } from "../modules/gameEvents";
 import { Category, addScore } from "../services/scoreServices";
 import { categoryPoints } from "./pointsConfig";
 import { addCurrency } from "../services/currencyServices";
-import { baseRewards, completionBonus } from "../services/rewardConfig";
+import { baseRewards, completionBonus, } from "../services/rewardConfig";
+import { formatScores } from "../modules/gameEvents";
+import { client } from "../Client";
+import { EMOJI } from "../constants";
+import { AnyTextableChannel, Client, Constants } from "oceanic.js";
 
 export interface Question {
     image_url?: string;
@@ -70,8 +74,7 @@ export function startGame(gameId: string): Game | null {
     if (!game || game.started) return null;
     game.started = true;
     if (game.timeout) clearTimeout(game.timeout);
-    
-   
+  
     game.gameTimer = setTimeout(() => {
         endGameDueToTimeout(gameId);
     }, 5 * 60 * 1000);
@@ -83,10 +86,9 @@ async function endGameDueToTimeout(gameId: string) {
     const game = games.get(gameId);
     if (!game) return;
     
-    
+   
     for (const [uid, pts] of Object.entries(game.scores)) {
         await addScore(uid, game.category, pts);
-        
         
         const isPerfectScore = game.perfectScores?.has(uid) && pts === game.questions.length * categoryPoints[game.category];
         const reward = {
@@ -96,7 +98,48 @@ async function endGameDueToTimeout(gameId: string) {
         await addCurrency(uid, reward);
     }
     
+   
+    try {
+        const channel = await client.rest.channels.get(game.channelId);
+        
+        
+        if (channel && isTextableChannel(channel)) {
+            await client.rest.channels.createMessage(channel.id, {
+                embeds: [
+                    {
+                        title: `${EMOJI.cd} Game Ended - Time's Up!`,
+                        description: "The game has ended because the 5-minute time limit was reached.",
+                        color: 0xffcc00,
+                        fields: [
+                            {
+                                name: "Final Scores",
+                                value: formatScores(game.scores, game.category, game) || "No one scored points in this game."
+                            }
+                        ]
+                    }
+                ]
+            });
+        }
+    } catch (error) {
+        console.error("Error sending timeout message:", error);
+    }
+    
+ 
     games.delete(gameId);
+}
+
+
+function isTextableChannel(channel: any): channel is AnyTextableChannel {
+    const textableTypes = [
+        Constants.ChannelTypes.GUILD_TEXT,
+        Constants.ChannelTypes.DM,
+        Constants.ChannelTypes.GUILD_ANNOUNCEMENT,
+        Constants.ChannelTypes.GUILD_VOICE, 
+        Constants.ChannelTypes.ANNOUNCEMENT_THREAD,
+        Constants.ChannelTypes.PUBLIC_THREAD,
+        Constants.ChannelTypes.PRIVATE_THREAD
+    ];
+    return textableTypes.includes(channel.type);
 }
 
 export async function stopGame(gameId: string): Promise<{ scores: Record<string, number>; game: Game } | null> {

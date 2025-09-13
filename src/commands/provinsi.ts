@@ -1,7 +1,7 @@
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { provinsis } from "../data/provinsis";
-import { createGame, startGame, games, stopGame } from "../services/gameManager";
+import { createGame, startGame, games, stopGame, skipQuestion } from "../services/gameManager";
 import { reply } from "../utils";
 
 function pickRandomQuestions(num: number) {

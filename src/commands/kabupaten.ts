@@ -1,7 +1,7 @@
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { kabupatens } from "../data/kabupatens";
-import { createGame, startGame, games, stopGame } from "../services/gameManager";
+import { createGame, startGame, games, stopGame, skipQuestion } from "../services/gameManager";
 import { reply } from "../utils";
 
 

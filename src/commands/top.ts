@@ -18,7 +18,7 @@ defineCommand({
             const endIndex = startIndex + limit;
 
             const allPlayers = await getTopPlayers(1000); 
-            const totalPlayers = allPlayers.length;
+            const totalPlayers = await getTotalPlayers(); // Fixed: Now using the function
             const totalPages = Math.ceil(totalPlayers / limit);
 
             if (page > totalPages) {
@@ -47,18 +47,17 @@ defineCommand({
                 });
             }
 
-           const leaderboardText = await Promise.all(
-    pagePlayers.map(async (player, index) => {
-        const globalRank = startIndex + index + 1;
-        try {
-            const user = await client.rest.users.get(player.userId);
-            return `**${globalRank}.** **${user.username}** — ${player.title} — **${player.totalPoints}** points`;
-        } catch {
-            return `**${globalRank}.** User ${player.userId} — ${player.title} — **${player.totalPoints}** points`;
-        }
-    })
-);
-
+            const leaderboardText = await Promise.all(
+                pagePlayers.map(async (player, index) => {
+                    const globalRank = startIndex + index + 1;
+                    try {
+                        const user = await client.rest.users.get(player.userId);
+                        return `**${globalRank}.** **${user.username}** — ${player.title} — **${player.totalPoints}** points`;
+                    } catch {
+                        return `**${globalRank}.** User ${player.userId} — ${player.title} — **${player.totalPoints}** points`;
+                    }
+                })
+            );
 
             return reply(message, {
                 embeds: [

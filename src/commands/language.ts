@@ -1,7 +1,7 @@
 import { defineCommand } from "../Command";
 import { EMOJI } from "../constants";
 import { languages } from "../data/languages";
-import { createGame, startGame, games, stopGame } from "../services/gameManager";
+import { createGame, startGame, games, stopGame, skipQuestion } from "../services/gameManager"; 
 import { reply } from "../utils";
 
 function pickRandomQuestions(num: number) {
@@ -18,16 +18,6 @@ function pickRandomQuestions(num: number) {
             answer: languageData.answer
         };
     });
-}
-
-function formatScores(scores: Record<string, number>, totalQuestions: number): string {
-    const sorted = Object.entries(scores)
-        .sort(([, a], [, b]) => b - a)
-        .map(([userId, score], index) => 
-            `${index + 1}. <@${userId}>: ${EMOJI.points} ${score} points`
-        );
-    
-    return sorted.join('\n') || 'No one scored any points!';
 }
 
 defineCommand({

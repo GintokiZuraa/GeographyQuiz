@@ -2,9 +2,20 @@ import '~commands';
 import '~modules';
 
 import { client } from './Client.js';
+import { startContinuousGames } from "./services/continuousGame.js";
+import { handleContinuousGameMessage } from "./modules/handlerContinuous.js";
 import { startReminderScheduler } from './modules/reminderScheduler.js';
-import { gameEvents, formatScores } from './modules/gameEvents.js';
+import { gameEvents } from './modules/gameEvents.js';
 import { getAliasData, createAliasEmbed, createPaginationButtons } from "./commands/aliases.js";
+
+// Add this: Message handler for continuous games
+client.on("messageCreate", async (message) => {
+    // Handle continuous game messages
+    const wasHandled = await handleContinuousGameMessage(message);
+    if (wasHandled) return;
+    
+    // Your other message handling logic can go here if needed
+});
 
 client.on("interactionCreate", async (interaction) => {
     // Check if it's a message component interaction
@@ -54,25 +65,10 @@ client.on("interactionCreate", async (interaction) => {
             console.error('Failed to send error message:', e);
         }
     }
-});
-gameEvents.on('gameTimeout', async (gameId, channelId, scores, totalQuestions) => {
-    try {
-        const channel = await client.rest.channels.get(channelId);
-        if (channel && 'messages' in channel) {
-            await client.rest.channels.createMessage(channelId, {
-                embeds: [
-                    {
-                        title: "⏰ Game Timeout",
-                        description: `The 5-minute time limit has been reached!\n\n**Final Scores:**\n${formatScores(scores)}`,
-                        color: 0xe74c3c,
-                        footer: { text: "Game automatically ended due to timeout" }
-                    }
-                ]
-            });
-        }
-    } catch (error) {
-        console.error('Failed to send timeout message:', error);
-    }
+
+    // Remove this line from here - it doesn't belong in interactionCreate
+    // const wasHandled = await handleContinuousGameMessage(interaction);
+    // if (wasHandled) return;
 });
 
 gameEvents.on('gameCancelled', async (game) => {
@@ -101,7 +97,5 @@ client.connect();
 client.on('ready', () => {
   console.log(`✅ Logged in as ${client.user?.tag}`);
   startReminderScheduler(client);
+  startContinuousGames();
 });
-
-
-

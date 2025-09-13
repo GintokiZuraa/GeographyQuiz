@@ -52,7 +52,15 @@ export const EMOJI: Record<string, string> = {
     'geogems':'<:geogems:1414058326500835428>',
     'province':'<:province:1414195031086076079>',
     'geoguessr':'<:geoguessr:1415604021883961374> ',
+    'skip':'<:skip:1414017211093352500> ',
 };
+
+export const CONTINUOUS_GAMES = {
+    FLAG_CHANNEL: "1375202232882167839", 
+    CAPITAL_CHANNEL: "1375229336134615090", 
+    LANGUAGE_CHANNEL: "1375229362042962022", 
+    KABUPATEN_CHANNEL: "1416358944934203422" 
+} as const;
 
 export const ENCHANT_MULTIPLIER: Record<string, number> = {
     'Not enchanted': 0,

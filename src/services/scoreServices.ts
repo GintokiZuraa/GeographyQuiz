@@ -164,6 +164,10 @@ export async function getCachedLeaderboard(): Promise<LeaderboardEntry[]> {
         return cachedLeaderboard;
     }
 
+    return await refreshLeaderboardCache();
+}
+
+export async function refreshLeaderboardCache(): Promise<LeaderboardEntry[]> {
     const allPlayers = await prisma.playerScore.findMany({
         include: {
             profile: {
@@ -194,10 +198,9 @@ export async function getCachedLeaderboard(): Promise<LeaderboardEntry[]> {
         rank: index + 1
     }));
 
-    lastCacheTime = now;
+    lastCacheTime = Date.now();
     return cachedLeaderboard;
 }
-
 
 export async function getPlayerRank(userId: string): Promise<number> {
     const leaderboard = await getCachedLeaderboard();
