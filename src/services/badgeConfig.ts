@@ -37,42 +37,40 @@ export interface BadgeProgress {
 
 export const badgeRequirements: Record<Category, BadgeRequirement[]> = {
     flag: [
-        { points: 1000, badge: 'flag1', title: 'Flag Novice', badgeId: '13', titleId: '1' },
-        { points: 100000, badge: 'flag2', title: 'Flag Expert', badgeId: '14', titleId: '2' },
-        { points: 1000000, badge: 'flag3', title: 'Flag Master', badgeId: '15', titleId: '3' }
+        { points: 1000, badge: 'flag1', title: 'Flag Spotter', badgeId: '13', titleId: '1' },
+        { points: 100000, badge: 'flag2', title: 'Flag Conqueror', badgeId: '14', titleId: '2' },
+        { points: 1000000, badge: 'flag3', title: 'Flag Overlord', badgeId: '15', titleId: '3' }
     ],
     capital: [
-        { points: 1000, badge: 'capital1', title: 'Capital Novice', badgeId: '16', titleId: '4' },
-        { points: 100000, badge: 'capital2', title: 'Capital Expert', badgeId: '17', titleId: '5' },
-        { points: 1000000, badge: 'capital3', title: 'Capital Master', badgeId: '18', titleId: '6' }
+        { points: 1000, badge: 'capital1', title: 'City Scout', badgeId: '16', titleId: '4' },
+        { points: 100000, badge: 'capital2', title: 'City Strategist', badgeId: '17', titleId: '5' },
+        { points: 1000000, badge: 'capital3', title: 'City Sovereign', badgeId: '18', titleId: '6' }
     ],
     language: [
-        { points: 1000, badge: 'language1', title: 'Language Novice', badgeId: '19', titleId: '7' },
-        { points: 100000, badge: 'language2', title: 'Language Expert', badgeId: '20', titleId: '8' },
-        { points: 1000000, badge: 'language3', title: 'Language Master', badgeId: '21', titleId: '9' }
+        { points: 1000, badge: 'language1', title: 'Tongue Tinkerer', badgeId: '19', titleId: '7' },
+        { points: 100000, badge: 'language2', title: 'Linguistic Maverick', badgeId: '20', titleId: '8' },
+        { points: 1000000, badge: 'language3', title: 'Polyglot Supreme', badgeId: '21', titleId: '9' }
     ],
-  
     state: [
-        { points: 10000, badge: 'states', title: 'State Novice', badgeId: '25', titleId: '13' },
-        { points: 100000, badge: 'states', title: 'State Expert', badgeId: '26', titleId: '14' },
-        { points: 1000000, badge: 'states', title: 'State Master', badgeId: '27', titleId: '15' }
+        { points: 10000, badge: 'states', title: 'State Pathfinder', badgeId: '25', titleId: '13' },
+        { points: 100000, badge: 'states', title: 'State Dominator', badgeId: '26', titleId: '14' },
+        { points: 1000000, badge: 'states', title: 'State Monarch', badgeId: '27', titleId: '15' }
     ],
     kabupaten: [
-        { points: 100000, badge: 'kabupaten_provinsi', title: 'Kabupaten Novice', badgeId: '28', titleId: '16' },
-        { points: 1000000, badge: 'kabupaten_provinsi', title: 'Kabupaten Expert', badgeId: '29', titleId: '17' },
-        { points: 10000000, badge: 'kabupaten_provinsi', title: 'Kabupaten Master', badgeId: '30', titleId: '18' }
+        { points: 100000, badge: 'kabupaten_provinsi', title: 'Kabupaten Adventurer', badgeId: '28', titleId: '16' },
+        { points: 1000000, badge: 'kabupaten_provinsi', title: 'Kabupaten Ruler', badgeId: '29', titleId: '17' },
+        { points: 10000000, badge: 'kabupaten_provinsi', title: 'Kabupaten Emperor', badgeId: '30', titleId: '18' }
     ],
     province: [
-        { points: 1000000, badge: 'province', title: 'Province Novice', badgeId: '31', titleId: '19' },
-        { points: 10000000, badge: 'province', title: 'Province Expert', badgeId: '32', titleId: '20' },
-        { points: 100000000, badge: 'province', title: 'Province Master', badgeId: '33', titleId: '21' }
+        { points: 1000000, badge: 'province', title: 'Province Explorer', badgeId: '31', titleId: '19' },
+        { points: 10000000, badge: 'province', title: 'Province Warlord', badgeId: '32', titleId: '20' },
+        { points: 100000000, badge: 'province', title: 'Province Immortal', badgeId: '33', titleId: '21' }
     ]
 };
 
-
 export const championBadges: BadgeRequirement[] = [
-    { points: 10000, badge: 'champ1', title: 'Geo Apprentice', badgeId: '22', titleId: '10' },
-    { points: 10000000, badge: 'champ2', title: 'Geo Explorer', badgeId: '23', titleId: '11' },
+    { points: 10000, badge: 'champ1', title: 'Geo Challenger', badgeId: '22', titleId: '10' },
+    { points: 10000000, badge: 'champ2', title: 'Geo enthusiast', badgeId: '23', titleId: '11' },
     { points: 100000000, badge: 'champ3', title: 'Rainbolt', badgeId: '24', titleId: '12' },
 ];
 
