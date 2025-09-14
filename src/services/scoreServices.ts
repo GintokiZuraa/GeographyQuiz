@@ -1,5 +1,5 @@
 import { prisma } from "../Prisma";
-import { playerExists } from "./playerCheck"; // Import from playerCheck
+import { playerExists } from "./playerCheck"; 
 
 export type Category = 
   | 'flag' 
@@ -86,8 +86,8 @@ export async function getTotalScore(userId: string) {
   });
 
   if (!playerScore) return 0;
-
-  return Object.values(playerScore).reduce((total, score) => total + score, 0);
+  return playerScore.flag + playerScore.capital + playerScore.language + 
+         playerScore.state + playerScore.kabupaten + playerScore.province;
 }
 
 export async function getLeaderboard(category?: Category, limit: number = 10) {
@@ -169,7 +169,9 @@ const CACHE_DURATION = 60 * 60 * 1000;
 
 export async function getCachedLeaderboard(): Promise<LeaderboardEntry[]> {
     const now = Date.now();
+    const cacheAge = now - lastCacheTime;
 
+    
     if (cachedLeaderboard.length > 0 && now - lastCacheTime < CACHE_DURATION) {
         return cachedLeaderboard;
     }
@@ -178,6 +180,7 @@ export async function getCachedLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 export async function refreshLeaderboardCache(): Promise<LeaderboardEntry[]> {
+    
     const allPlayers = await prisma.playerScore.findMany({
         include: {
             profile: {
@@ -186,17 +189,23 @@ export async function refreshLeaderboardCache(): Promise<LeaderboardEntry[]> {
         }
     });
 
-    const playersWithTotal = allPlayers.map(player => {
-        const totalPoints = Object.values(player)
-            .filter(val => typeof val === "number")
-            .reduce((sum: number, score: number) => sum + score, 0);
 
-        return {
-            userId: player.userId,
-            totalPoints,
-            title: player.profile?.title || "Geo Beginner"
-        };
-    });
+    const playersWithTotal = allPlayers.map(player => {
+    const scoreFields: (keyof typeof player)[] = ['flag', 'capital', 'language', 'state', 'kabupaten', 'province'];
+    
+    const totalPoints = scoreFields.reduce((sum: number, field: keyof typeof player) => {
+        if (field in player && typeof player[field] === 'number') {
+            return sum + (player[field] as number);
+        }
+        return sum;
+    }, 0);
+
+    return {
+        userId: player.userId,
+        totalPoints,
+        title: player.profile?.title || "Geo Beginner"
+    };
+});
 
     playersWithTotal.sort((a, b) => b.totalPoints - a.totalPoints);
 
@@ -209,6 +218,7 @@ export async function refreshLeaderboardCache(): Promise<LeaderboardEntry[]> {
     }));
 
     lastCacheTime = Date.now();
+    
     return cachedLeaderboard;
 }
 
@@ -226,4 +236,9 @@ export async function getTotalPlayers(): Promise<number> {
 export async function getTopPlayers(limit: number = 45): Promise<LeaderboardEntry[]> {
     const leaderboard = await getCachedLeaderboard();
     return leaderboard.slice(0, limit);
+}
+
+export function resetLeaderboardCache(): void {
+    cachedLeaderboard = [];
+    lastCacheTime = 0;
 }

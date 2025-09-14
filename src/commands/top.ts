@@ -72,8 +72,7 @@ defineCommand({
             });
 
         } catch (error) {
-            console.error("Error in top command:", error);
-            return reply(message, "❌ An error occurred while fetching the leaderboard.");
+            return reply(message, "An error occurred while fetching the leaderboard.");
         }
     }
 });

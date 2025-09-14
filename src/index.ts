@@ -7,6 +7,7 @@ import { handleContinuousGameMessage } from "./modules/handlerContinuous.js";
 import { startReminderScheduler } from './modules/reminderScheduler.js';
 import { gameEvents } from './modules/gameEvents.js';
 import { getAliasData, createAliasEmbed, createPaginationButtons } from "./commands/aliases.js";
+import { refreshLeaderboardCache } from "./services/scoreServices";
 
 client.on("messageCreate", async (message) => {
   
@@ -93,5 +94,6 @@ client.connect();
 client.on('ready', () => {
   console.log(`✅ Logged in as ${client.user?.tag}`);
   startReminderScheduler(client);
+  refreshLeaderboardCache();
   startContinuousGames();
 });

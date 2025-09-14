@@ -1,5 +1,5 @@
 import { defineCommand } from "../Command";
-import { refreshLeaderboardCache } from "../services/scoreServices";
+import { refreshLeaderboardCache, resetLeaderboardCache } from "../services/scoreServices";
 import { reply } from "../utils";
 
 defineCommand({
@@ -9,11 +9,13 @@ defineCommand({
     ownerOnly: true, 
     async run(message) {
         try {
+
+            resetLeaderboardCache();
+
             await refreshLeaderboardCache();
-            return reply(message, "Leaderboard cache has been force updated!");
+            return reply(message, " Leaderboard cache has been force updated!");
         } catch (error) {
-            console.error("Error force updating leaderboard:", error);
-            return reply(message, "An error occurred while force updating the leaderboard.");
+            return reply(message, " An error occurred while force updating the leaderboard.");
         }
     }
 });
