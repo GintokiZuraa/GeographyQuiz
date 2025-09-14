@@ -1,5 +1,6 @@
 
 import { prisma } from "../Prisma";
+import { playerExists } from "./playerCheck";
 
 export interface CurrencyReward {
   coins: number;
@@ -7,25 +8,35 @@ export interface CurrencyReward {
 }
 
 export async function addCurrency(userId: string, reward: CurrencyReward) {
-  return await prisma.playerCurrency.upsert({
-    where: { userId },
-    update: {
-      coins: { increment: reward.coins },
-      gems: reward.gems ? { increment: reward.gems } : undefined,
-      updatedAt: new Date()
-    },
-    create: {
-      userId,
-      coins: reward.coins,
-      gems: reward.gems || 0
+    const exists = await playerExists(userId);
+    if (!exists) {
+        throw new Error("PLAYER_NOT_REGISTERED");
     }
-  });
+
+    return await prisma.playerCurrency.upsert({
+        where: { userId },
+        update: {
+            coins: { increment: reward.coins },
+            gems: reward.gems ? { increment: reward.gems } : undefined,
+            updatedAt: new Date()
+        },
+        create: {
+            userId,
+            coins: reward.coins,
+            gems: reward.gems || 0
+        }
+    });
 }
 
 export async function getCurrency(userId: string) {
-  return await prisma.playerCurrency.findUnique({
-    where: { userId }
-  });
+    const exists = await playerExists(userId);
+    if (!exists) {
+        throw new Error("PLAYER_NOT_REGISTERED");
+    }
+
+    return await prisma.playerCurrency.findUnique({
+        where: { userId }
+    });
 }
 
 export async function deductCurrency(userId: string, amount: number, currencyType: 'coins' | 'gems' = 'coins') {

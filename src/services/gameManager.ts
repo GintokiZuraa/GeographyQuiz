@@ -86,22 +86,27 @@ async function endGameDueToTimeout(gameId: string) {
     const game = games.get(gameId);
     if (!game) return;
     
-   
     for (const [uid, pts] of Object.entries(game.scores)) {
-        await addScore(uid, game.category, pts);
-        
-        const isPerfectScore = game.perfectScores?.has(uid) && pts === game.questions.length * categoryPoints[game.category];
-        const reward = {
-            coins: pts * baseRewards[game.category].coins,
-            gems: isPerfectScore ? completionBonus.gems : 0 
-        };
-        await addCurrency(uid, reward);
+        try {
+            await addScore(uid, game.category, pts);
+            
+            const isPerfectScore = game.perfectScores?.has(uid) && pts === game.questions.length * categoryPoints[game.category];
+            const reward = {
+                coins: pts * baseRewards[game.category].coins,
+                gems: isPerfectScore ? completionBonus.gems : 0 
+            };
+            await addCurrency(uid, reward);
+        } catch (error: any) {
+            if (error.message === "PLAYER_NOT_REGISTERED") {
+                console.log(`Player ${uid} not registered, skipping score saving`);
+            } else {
+                console.error("Error saving score:", error);
+            }
+        }
     }
     
-   
     try {
         const channel = await client.rest.channels.get(game.channelId);
-        
         
         if (channel && isTextableChannel(channel)) {
             await client.rest.channels.createMessage(channel.id, {
@@ -124,7 +129,6 @@ async function endGameDueToTimeout(gameId: string) {
         console.error("Error sending timeout message:", error);
     }
     
- 
     games.delete(gameId);
 }
 
@@ -198,51 +202,51 @@ export function submitAnswer(gameId: string, userId: string, content: string): {
     const isCorrect = current.answer.some(a => a.toLowerCase() === normalized);
     
     if (isCorrect) {
-     
         const points = categoryPoints[game.category];
         game.scores[userId] = (game.scores[userId] || 0) + points;
         game.currentIndex++;
 
         const finished = game.currentIndex >= game.questions.length;
         
-       
         if (game.perfectScores) {
             const currentScore = game.scores[userId] || 0;
             const maxPossibleScore = game.currentIndex * categoryPoints[game.category];
             
-       
             if (currentScore === maxPossibleScore) {
                 game.perfectScores.add(userId);
             } else {
-             
                 game.perfectScores.delete(userId);
             }
         }
         
-     
         if (finished && game.gameTimer) {
             clearTimeout(game.gameTimer);
             
-           
             setTimeout(async () => {
                 for (const [uid, pts] of Object.entries(game.scores)) {
-                    await addScore(uid, game.category, pts);
-                    
-                   
-                    const isPerfect = game.perfectScores?.has(uid) && pts === game.questions.length * categoryPoints[game.category];
-                    const reward = {
-                        coins: pts * baseRewards[game.category].coins,
-                        gems: isPerfect ? completionBonus.gems : 0
-                    };
-                    await addCurrency(uid, reward);
+                    try {
+                        await addScore(uid, game.category, pts);
+                        
+                        const isPerfect = game.perfectScores?.has(uid) && pts === game.questions.length * categoryPoints[game.category];
+                        const reward = {
+                            coins: pts * baseRewards[game.category].coins,
+                            gems: isPerfect ? completionBonus.gems : 0
+                        };
+                        await addCurrency(uid, reward);
+                    } catch (error: any) {
+                        if (error.message === "PLAYER_NOT_REGISTERED") {
+                            console.log(`Player ${uid} not registered, skipping score saving`);
+                        } else {
+                            console.error("Error saving score:", error);
+                        }
+                    }
                 }
                 games.delete(gameId);
-            }, 1000); 
+            }, 1000);
         }
         
         return { correct: true, answer: current.answer[0], finished, points };
     } else {
-       
         if (game.perfectScores) {
             game.perfectScores.delete(userId);
         }

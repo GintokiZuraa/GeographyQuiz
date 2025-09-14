@@ -1,5 +1,5 @@
 import { prisma } from "../Prisma";
-
+import { playerExists } from "./playerCheck"; // Import from playerCheck
 
 export type Category = 
   | 'flag' 
@@ -10,23 +10,28 @@ export type Category =
   | 'province';
 
 export async function addScore(userId: string, category: Category, points: number) {
-  if (points <= 0) {
-    throw new Error("Points must be positive");
-  }
-
-  const updateData = {
-    [category]: { increment: points },
-    updatedAt: new Date()
-  };
-
-  return await prisma.playerScore.upsert({
-    where: { userId },
-    update: updateData,
-    create: { 
-      userId: userId,  
-      [category]: points
+    const exists = await playerExists(userId);
+    if (!exists) {
+        throw new Error("PLAYER_NOT_REGISTERED");
     }
-  });
+
+    if (points <= 0) {
+        throw new Error("Points must be positive");
+    }
+
+    const updateData = {
+        [category]: { increment: points },
+        updatedAt: new Date()
+    };
+
+    return await prisma.playerScore.upsert({
+        where: { userId },
+        update: updateData,
+        create: { 
+            userId: userId,  
+            [category]: points
+        }
+    });
 }
 
 export async function getScore(userId: string, category: Category) {
@@ -40,26 +45,31 @@ export async function getScore(userId: string, category: Category) {
 
 
 export async function getAllScores(userId: string): Promise<Record<string, number>> {
-  const playerScore = await prisma.playerScore.findUnique({
-    where: { userId },
-    select: {
-      flag: true,
-      capital: true,
-      language: true,
-      state: true,
-      kabupaten: true,
-      province: true
+    const exists = await playerExists(userId);
+    if (!exists) {
+        throw new Error("PLAYER_NOT_REGISTERED");
     }
-  });
 
-  return playerScore || {
-    flag: 0,
-    capital: 0,
-    language: 0,
-    state: 0,
-    kabupaten: 0,
-    province: 0
-  };
+    const playerScore = await prisma.playerScore.findUnique({
+        where: { userId },
+        select: {
+            flag: true,
+            capital: true,
+            language: true,
+            state: true,
+            kabupaten: true,
+            province: true
+        }
+    });
+
+    return playerScore || {
+        flag: 0,
+        capital: 0,
+        language: 0,
+        state: 0,
+        kabupaten: 0,
+        province: 0
+    };
 }
 
 export async function getTotalScore(userId: string) {

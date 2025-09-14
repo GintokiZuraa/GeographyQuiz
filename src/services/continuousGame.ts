@@ -9,6 +9,7 @@ import { EMOJI, CONTINUOUS_GAMES } from "../constants";
 import { AnyChannel, Constants } from "oceanic.js";
 import { baseRewards } from "./rewardConfig";
 import { categoryPoints } from "./pointsConfig";
+import { playerExists } from "./playerCheck";
 
 function isCategory(category: string): category is Category {
     return ['flag', 'capital', 'language', 'state', 'kabupaten', 'province'].includes(category);

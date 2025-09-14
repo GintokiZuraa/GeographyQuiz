@@ -1,4 +1,5 @@
 import { prisma } from "../Prisma";
+import { playerExists } from "./playerCheck";
 
 export interface PlayerProfile {
     userId: string;
@@ -8,6 +9,11 @@ export interface PlayerProfile {
 }
 
 export async function getProfile(userId: string): Promise<PlayerProfile> {
+    const exists = await playerExists(userId);
+    if (!exists) {
+        throw new Error("PLAYER_NOT_REGISTERED");
+    }
+
     return await prisma.playerProfiles.upsert({
         where: { userId },
         update: {},

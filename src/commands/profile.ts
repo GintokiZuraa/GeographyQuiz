@@ -7,6 +7,7 @@ import { getEarnedBadges } from "../services/badgeConfig";
 import { EMOJI } from "../constants";
 import { reply } from "../utils";
 import { getPlayerRank } from "../services/scoreServices";
+import { playerExists } from "../services/playerCheck";
 
 defineCommand({
     name: "profile",
@@ -17,6 +18,19 @@ defineCommand({
     async run(message) {
         const userId = message.author.id;
 
+ const exists = await playerExists(userId);
+        if (!exists) {
+            return reply(message, {
+                embeds: [
+                    {
+                        title: "Profile Not Found",
+                        description: "You need to register first! Use `Geo start` to create your player profile.",
+                        color: 0xe74c3c,
+                        footer: { text: "Type Geo start to begin playing" }
+                    }
+                ]
+            });
+        }
         const scores = await getAllScores(userId);
         const currency = await getCurrency(userId);
         const profile = await getProfile(userId);

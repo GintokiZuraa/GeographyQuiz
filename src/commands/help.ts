@@ -5,6 +5,8 @@ defineCommand({
     name: "help",
     description: "List all commands or get info about a specific command",
     usages: ["[command]"],
+    aliases: ["commands", "h", "cmds"],
+    hidden: true,
     async run(message, [name]) {
         if (!name) {
             return reply(message, {
