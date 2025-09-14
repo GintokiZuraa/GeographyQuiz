@@ -9,6 +9,7 @@ import { EMOJI, CONTINUOUS_GAMES } from "../constants";
 import { AnyChannel, Constants } from "oceanic.js";
 import { baseRewards } from "./rewardConfig";
 import { categoryPoints } from "./pointsConfig";
+import { prisma } from "../Prisma";
 import { playerExists } from "./playerCheck";
 
 function isCategory(category: string): category is Category {
@@ -79,8 +80,79 @@ function isTextableChannel(channel: AnyChannel): boolean {
     );
 }
 
-export function startContinuousGames(): void {
-    Object.values(CONTINUOUS_GAMES_CONFIG).forEach((channelConfig) => {
+
+async function getQuestionCount(channelId: string): Promise<number> {
+    try {
+        const gameState = await prisma.gameState.upsert({
+            where: { channelId },
+            update: {},
+            create: { channelId, questionCount: 0 }
+        });
+        return gameState.questionCount;
+    } catch (error) {
+        console.error('Error getting question count:', error);
+        return 0;
+    }
+}
+
+async function incrementQuestionCount(channelId: string): Promise<number> {
+    try {
+        const gameState = await prisma.gameState.upsert({
+            where: { channelId },
+            update: { 
+                questionCount: { increment: 1 },
+                updatedAt: new Date()
+            },
+            create: { 
+                channelId, 
+                questionCount: 1 
+            }
+        });
+        return gameState.questionCount;
+    } catch (error) {
+        console.error('Error incrementing question count:', error);
+        return 0;
+    }
+}
+
+async function setQuestionCount(channelId: string, count: number): Promise<void> {
+    try {
+        await prisma.gameState.upsert({
+            where: { channelId },
+            update: { 
+                questionCount: count,
+                updatedAt: new Date()
+            },
+            create: { 
+                channelId, 
+                questionCount: count 
+            }
+        });
+    } catch (error) {
+        console.error('Error setting question count:', error);
+    }
+}
+
+
+interface ContinuousGameState {
+    currentQuestion: Question | null;
+    scores: Record<string, number>;
+    lastAnswerTime: number;
+}
+
+interface GameChannel {
+    id: string;
+    category: Category;
+    data: any;
+    emoji: string;
+    state: ContinuousGameState;
+}
+
+
+export async function startContinuousGames(): Promise<void> {
+    for (const channelConfig of Object.values(CONTINUOUS_GAMES_CONFIG)) {
+        const savedCount = await getQuestionCount(channelConfig.id);
+        
         const gameChannel: GameChannel = {
             id: channelConfig.id,
             category: channelConfig.category,
@@ -95,8 +167,9 @@ export function startContinuousGames(): void {
         };
         
         gameStates.set(channelConfig.id, gameChannel);
-        postNewQuestion(channelConfig.id); 
-    });
+        
+        await postNewQuestion(channelConfig.id, savedCount);
+    }
 }
 
 function pickRandomQuestion(data: any): Question {
@@ -221,19 +294,26 @@ function pickFromFlatData(data: Record<string, { image_url?: string; question: s
     };
 }
 
-export async function postNewQuestion(channelId: string) {
+export async function postNewQuestion(channelId: string, initialCount?: number) {
     const gameChannel = gameStates.get(channelId);
     if (!gameChannel) return;
 
     gameChannel.state.currentQuestion = pickRandomQuestion(gameChannel.data);
-    gameChannel.state.questionCount++;
+    
+    let newCount: number;
+    if (initialCount !== undefined) {
+        await setQuestionCount(channelId, initialCount + 1);
+        newCount = initialCount + 1;
+    } else {
+        newCount = await incrementQuestionCount(channelId);
+    }
     
     try {
         const channel = await client.rest.channels.get(channelId);
         
         if (channel && isTextableChannel(channel)) {
             const embedData: any = {
-                title: `${gameChannel.emoji} ${gameChannel.category.toUpperCase()} Quiz #${gameChannel.state.questionCount}`,
+                title: `${gameChannel.emoji} ${gameChannel.category.toUpperCase()} Quiz #${newCount}`,
                 description: gameChannel.state.currentQuestion.question,
                 color: 0x57f287,
                 footer: { 
@@ -241,11 +321,9 @@ export async function postNewQuestion(channelId: string) {
                 }
             };
 
-           
             if (gameChannel.state.currentQuestion.image_url && 
                 gameChannel.state.currentQuestion.image_url.startsWith('http')) {
                 embedData.image = { url: gameChannel.state.currentQuestion.image_url };
-            } else {
             }
 
             await client.rest.channels.createMessage(channelId, {
@@ -297,7 +375,6 @@ export async function handleContinuousAnswer(
         };
         await addCurrency(userId, reward);
         
-
         await postNewQuestion(channelId);
         
         return { 
@@ -351,8 +428,9 @@ export function skipContinuousQuestion(channelId: string): string | null {
     
     const currentAnswer = gameChannel.state.currentQuestion.answer[0];
     
-   
-    postNewQuestion(channelId);
+    getQuestionCount(channelId).then(currentCount => {
+        postNewQuestion(channelId, currentCount - 1);
+    });
     
     return currentAnswer;
 }
