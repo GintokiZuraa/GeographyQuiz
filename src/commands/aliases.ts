@@ -1,8 +1,6 @@
-
 import { defineCommand } from "../Command";
 import { reply } from "../utils";
 import { ButtonStyles, ComponentTypes, MessageActionRow } from "oceanic.js";
-
 
 import * as americanStates from "../data/americanStates";
 import * as capitals from "../data/capitals";
@@ -10,7 +8,6 @@ import * as flags from "../data/flags";
 import * as kabupatens from "../data/kabupatens";
 import * as languages from "../data/languages";
 import * as provinsis from "../data/provinsis";
-
 
 const categoryData: Record<string, any> = {
     "american-states": americanStates.UnitedStates || americanStates,
@@ -20,7 +17,6 @@ const categoryData: Record<string, any> = {
     "languages": languages.languages || languages,
     "provinsis": provinsis.provinsis || provinsis
 };
-
 
 const categoryInfo: Record<string, { name: string; hasSubcategories: boolean }> = {
     "american-states": { name: "American States", hasSubcategories: false },
@@ -45,6 +41,9 @@ interface AliasData {
     totalItems: number;
 }
 
+// Add a map to track message creation times
+const messageTimeouts = new Map<string, NodeJS.Timeout>();
+
 export function getAliasData(category: string, subcategory?: string, page = 1): AliasData | null {
     const data = categoryData[category];
     if (!data) return null;
@@ -52,11 +51,9 @@ export function getAliasData(category: string, subcategory?: string, page = 1): 
     let items: AliasItem[] = [];
     let totalPages = 1;
 
-
     const hasSubcategories = categoryInfo[category]?.hasSubcategories;
 
     if (subcategory && hasSubcategories) {
-      
         const subData = data[subcategory];
         if (!subData) return null;
 
@@ -65,20 +62,17 @@ export function getAliasData(category: string, subcategory?: string, page = 1): 
             answers: item.answer || []
         }));
     } else if (!subcategory && hasSubcategories) {
-      
         items = Object.keys(data).map(sub => ({
             name: sub,
             answers: [`Use \`?aliases ${category} ${sub}\` to view answers`]
         }));
     } else {
-       
         items = Object.entries(data).map(([name, item]: [string, any]) => ({
             name,
             answers: item.answer || []
         }));
     }
 
-   
     totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
     const startIdx = (page - 1) * ITEMS_PER_PAGE;
     const endIdx = startIdx + ITEMS_PER_PAGE;
@@ -126,11 +120,9 @@ export function createAliasEmbed(category: string, subcategory: string | undefin
     };
 }
 
-
-export function createPaginationButtons(category: string, subcategory: string | undefined, currentPage: number, totalPages: number) {
+export function createPaginationButtons(category: string, subcategory: string | undefined, currentPage: number, totalPages: number, timestamp: number) {
     const buttons = [];
 
-   
     const subcategoryParam = subcategory === "" ? undefined : subcategory;
     const subcategoryID = subcategoryParam || "";
 
@@ -139,7 +131,7 @@ export function createPaginationButtons(category: string, subcategory: string | 
             type: ComponentTypes.BUTTON,
             style: ButtonStyles.SECONDARY,
             label: "◀️ Previous",
-            customID: `alias_prev_${category}_${subcategoryID}_${currentPage - 1}`
+            customID: `alias_prev_${category}_${subcategoryID}_${currentPage - 1}_${timestamp}`
         });
     }
 
@@ -148,7 +140,7 @@ export function createPaginationButtons(category: string, subcategory: string | 
             type: ComponentTypes.BUTTON,
             style: ButtonStyles.SECONDARY,
             label: "Next ▶️",
-            customID: `alias_next_${category}_${subcategoryID}_${currentPage + 1}`
+            customID: `alias_next_${category}_${subcategoryID}_${currentPage + 1}_${timestamp}`
         });
     }
 
@@ -161,18 +153,44 @@ export function createPaginationButtons(category: string, subcategory: string | 
 
     return [];
 }
+
+// Add this function to handle button interactions
+export function handleAliasButtonInteraction(interaction: any): boolean {
+    const customID = interaction.data.customID;
+    
+    // Check if button is expired (more than 1 minute old)
+    const parts = customID.split('_');
+    const timestamp = parseInt(parts[parts.length - 1]);
+    
+    if (Date.now() - timestamp > 60000) { // 1 minute = 60000ms
+        interaction.createMessage({
+            content: "❌ These buttons have expired. Use the command again to get fresh buttons.",
+            flags: 64 // EPHEMERAL
+        });
+        return false;
+    }
+    
+    return true; // Button is still valid
+}
+
+// Add this cleanup function to clear timeouts when needed
+export function cleanupAliasTimeouts(): void {
+    for (const timeout of messageTimeouts.values()) {
+        clearTimeout(timeout);
+    }
+    messageTimeouts.clear();
+}
+
 defineCommand({
     name: "aliases",
     description: "View answer aliases for different categories",
-    aliases: ["al","alias",],
+    aliases: ["al","alias"],
     usages: ["<category>", "<category> <subcategory>", "<category> <page>", "<category> <subcategory> <page>", "list", "list <category>"],
     async run(message, args) {
         const [arg1, arg2, arg3] = args;
 
-        
         if (arg1 === "list") {
             if (arg2) {
-            
                 const category = arg2;
                 if (!categoryData[category]) {
                     return reply(message, {
@@ -208,7 +226,6 @@ defineCommand({
                 });
             }
 
-      
             const categories = Object.entries(categoryInfo).map(([key, info]) => 
                 `• \`${key}\` - ${info.name}${info.hasSubcategories ? ' (has subcategories)' : ''}`
             ).join('\n');
@@ -233,18 +250,15 @@ defineCommand({
             });
         }
 
-       
         let subcategory: string | undefined;
         let page = 1;
 
         if (arg2) {
-         
             const pageNum = parseInt(arg2);
             if (!isNaN(pageNum)) {
                 page = pageNum;
             } else {
                 subcategory = arg2;
-              
                 if (arg3) {
                     const pageNum2 = parseInt(arg3);
                     if (!isNaN(pageNum2)) {
@@ -254,7 +268,6 @@ defineCommand({
             }
         }
 
-   
         const data = getAliasData(arg1, subcategory, page);
         if (!data || data.items.length === 0) {
             return reply(message, {
@@ -268,14 +281,33 @@ defineCommand({
             });
         }
 
-      
-        const embed = createAliasEmbed(arg1, subcategory, page, data);
-        const components = createPaginationButtons(arg1, subcategory, page, data.totalPages);
+        // Generate a timestamp for button expiration
+        const timestamp = Date.now();
 
-        await reply(message, {
+        const embed = createAliasEmbed(arg1, subcategory, page, data);
+        const components = createPaginationButtons(arg1, subcategory, page, data.totalPages, timestamp);
+
+        const sentMessage = await reply(message, {
             embeds: [embed],
             components: components
         });
+
+        // Set timeout to remove buttons after 1 minute
+        const timeout = setTimeout(() => {
+            if (sentMessage && sentMessage.edit) {
+                sentMessage.edit({
+                    components: [] // Remove all buttons
+                }).catch(() => {}); // Ignore errors if message was deleted
+            }
+            if (sentMessage && sentMessage.id) {
+                messageTimeouts.delete(sentMessage.id);
+            }
+        }, 60000); // 1 minute
+
+        if (sentMessage && sentMessage.id) {
+            messageTimeouts.set(sentMessage.id, timeout);
+        }
+
+        return sentMessage;
     }
 });
-
