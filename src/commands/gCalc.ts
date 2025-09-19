@@ -3,10 +3,16 @@ import { Message } from 'oceanic.js';
 
 export default defineCommand({
     name: 'gcalc',
+    aliases: ['geo gcalc'],
     description: 'Calculate cap g trade',
     usages: ['<TT value>'],
     run: async (message: Message) => {
-        const args = message.content.split(' ').slice(1);
+        let args = message.content.split(' ').slice(1);
+        
+        if (args[0] === 'gcalc') {
+            args = args.slice(1);
+        }
+        
         const TT = parseInt(args[0]);
 
         if (isNaN(TT) || TT < 0) {

@@ -41,56 +41,52 @@ async function idleI(message: Message) {
     if (!idleItems.length) return;
 
     try {
-        // Grab the page name from source embed, clean out failed emoji codes
         let pageName = message.embeds[0].fields?.[0]?.name ?? "";
 
-// Strip custom emoji markup and shortcodes
-pageName = pageName
-    .replace(/<a?:\w+:\d+>/g, "")
-    .replace(/:[a-zA-Z0-9_]+:/g, "")
-    .trim();
+        pageName = pageName
+            .replace(/<a?:\w+:\d+>/g, "")
+            .replace(/:[a-zA-Z0-9_]+:/g, "")
+            .trim();
 
-
-        // Regex depends on category
         let regex: RegExp;
         if (pageName.startsWith("⚠️ Debt items")) {
-            regex = /(?<=\*\*.+?\*\*: -)[\d,]+/g; // with "-"
+            regex = /(?<=\*\*.+?\*\*: -)[\d,]+/g; 
         } else {
-            regex = /(?<=\*\*.+?\*\*: )[\d,]+/g; // without "-"
+            regex = /(?<=\*\*.+?\*\*: )[\d,]+/g; 
         }
 
         const invAmounts = invField.match(regex)?.map(a => Number(a.replace(/,/g, "")));
         if (!invAmounts) return;
 
-        // Calculate worths
         const itemWorths = invAmounts.map((amount, i) => {
             const price = idleItems.find(item => item.name === invItems[i])?.price;
-            if (!price) throw new Error(`${invItems[i]} has no price`);
-            return amount * price;
+            return amount * (price || 0);
         });
 
-        // Total worth / debt
         let totalValue = itemWorths.reduce((acc, v) => acc + v, 0);
         let totalLine: string;
 
         if (pageName.startsWith("⚠️ Debt items")) {
             totalLine = `**Total debt:** ${numberFormat(totalValue)}`;
         } else {
-            const afterTax = Math.floor(totalValue * 0.8); // apply 20% tax
+            const afterTax = Math.floor(totalValue * 0.8);
             totalLine = `**Total worth:** ${numberFormat(afterTax)} *(after 20% tax)*`;
         }
 
-        // Align notes
         const longestWorth = Math.max(...itemWorths.map(w => numberFormat(w).length));
 
         idleItems.forEach(item => {
             const index = invItems.indexOf(item.name);
             if (index === -1) return;
 
-            item.note = `${numberFormat(itemWorths[index]).padStart(longestWorth, " ")}  ${item.note ?? ""}`;
+            const worth = itemWorths[index];
+            if (worth > 0) {
+                item.note = `${numberFormat(worth).padStart(longestWorth, " ")}  ${item.note ?? ""}`;
+            } else {
+                item.note = `${numberFormat(0).padStart(longestWorth, " ")}  ${item.note ?? ""}`;
+            }
         });
 
-        // Build fields for embed (grid style)
         const fields = idleItems.map(item => ({
             name: item.name,
             value: item.note || "—",
@@ -102,7 +98,7 @@ pageName = pageName
                 {
                     title: pageName || "Idle Inventory",
                     description: totalLine,
-                    color: 0x57f287, // green
+                    color: 0x57f287, 
                     fields,
                     timestamp: new Date().toISOString()
                 }
